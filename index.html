@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seni Çok Seviyorum... ❤️</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Playfair Display & Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at center, #2d0b1e 0%, #12030c 100%);
+            color: #fff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .font-serif-custom {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Ambient floating hearts background */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Glassmorphism Card Effect */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 182, 193, 0.2);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(225, 29, 72, 0.15);
+        }
+
+        /* Glowing text & button effects */
+        .text-glow {
+            text-shadow: 0 0 15px rgba(244, 63, 94, 0.6), 0 0 30px rgba(244, 63, 94, 0.3);
+        }
+
+        .gold-glow {
+            color: #fde047;
+            text-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+
+        /* Heartbeat Animation */
+        @keyframes heartbeat {
+            0% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(225, 29, 72, 0.6)); }
+            15% { transform: scale(1.15); filter: drop-shadow(0 0 25px rgba(225, 29, 72, 0.9)); }
+            30% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(225, 29, 72, 0.6)); }
+            45% { transform: scale(1.08); filter: drop-shadow(0 0 18px rgba(225, 29, 72, 0.8)); }
+            60% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(225, 29, 72, 0.6)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(225, 29, 72, 0.6)); }
+        }
+
+        .beating-heart {
+            animation: heartbeat 1.8s infinite ease-in-out;
+            transform-origin: center;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(20, 5, 15, 0.8);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(244, 63, 94, 0.4);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(244, 63, 94, 0.7);
+        }
+
+        /* Modal Overlay Transition */
+        .modal-enter {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        .modal-enter-active {
+            opacity: 1;
+            transform: scale(1);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+    </style>
+</head>
+<body class="relative flex flex-col justify-between items-center py-10 px-4 min-h-screen selection:bg-rose-500 selection:text-white">
+
+    <!-- Ambient Particle Canvas -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Top Music Control Bar -->
+    <header class="w-full max-w-3xl z-20 flex justify-between items-center mb-6 px-2">
+        <div class="flex items-center space-x-2 text-rose-300 text-sm font-medium">
+            <span class="inline-block w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+            <span>Sadece Senin İçin...</span>
+        </div>
+        <button id="musicToggleBtn" class="flex items-center space-x-2 bg-rose-950/60 hover:bg-rose-900/80 text-rose-200 border border-rose-500/30 px-4 py-2 rounded-full transition-all duration-300 backdrop-blur-md text-xs sm:text-sm">
+            <i id="musicIcon" class="fas fa-music text-rose-400"></i>
+            <span id="musicText"></span>
+        </button>
+    </header>
+
+    <!-- Main Container Card -->
+    <main class="w-full max-w-3xl glass-card rounded-3xl p-6 sm:p-10 z-10 my-auto text-center relative overflow-hidden">
+        
+        <!-- Decorative Glow Orbs -->
+        <div class="absolute -top-20 -left-20 w-40 h-40 bg-rose-600/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-20 -right-20 w-40 h-40 bg-pink-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <!-- Glowing Interactive Heart Header -->
+        <div class="my-4 flex justify-center items-center">
+            <div class="relative cursor-pointer group" id="mainHeart">
+                <svg class="w-24 h-24 sm:w-28 sm:h-28 beating-heart text-rose-500 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <span class="text-xs bg-black/70 text-rose-200 px-2 py-1 rounded-full border border-rose-500/30">Tıkla ❤️</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Title -->
+        <h1 class="font-serif-custom text-3xl sm:text-5xl font-bold text-glow text-rose-100 mb-3 tracking-wide">
+            Esram Beni Affedermisinn Güzelimmm...
+        </h1>
+        <p class="text-rose-300/80 text-sm sm:text-base italic mb-8 font-light">
+            Seninle beraber olmak ıcın hayatımı bile ortaya koayarım sevgilim...
+        </p>
+
+        <!-- Dynamic Typewriter Box -->
+        <div class="bg-black/30 rounded-2xl p-5 sm:p-8 border border-rose-500/20 text-left min-h-[180px] sm:min-h-[160px] flex items-center mb-8 shadow-inner">
+            <p id="typewriterText" class="font-serif-custom text-rose-100 text-base sm:text-lg leading-relaxed sm:leading-loose">
+                <!-- Text will be typed dynamically here -->
+            </p>
+        </div>
+
+        <!-- Memory Notes Carousel / Cards Section -->
+        <div class="mb-8">
+            <h3 class="text-xs uppercase tracking-widest text-rose-400 font-semibold mb-4">IRMAGA</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="bg-rose-950/40 border border-rose-500/20 p-4 rounded-xl hover:border-rose-400/50 transition-all duration-300">
+                    <i class="fas fa-seedling text-purple-500 text-xl mb-2"></i>
+                    <h4 class="text-sm font-semibold text-rose-100">Güzelligin</h4>
+                    <p class="text-xs text-rose-300/70 mt-1">Evrenler Uzerındekı En Güzel En Hos En Cekici Kızssın Dunyalar güzelisin esramm</p>
+                </div>
+                <div class="bg-rose-950/40 border border-rose-500/20 p-4 rounded-xl hover:border-rose-400/50 transition-all duration-300">
+                    <i class="fas fa-heart text-red-500 text-xl mb-2"></i>
+                    <h4 class="text-sm font-semibold text-rose-100">Saçların</h4>
+                    <p class="text-xs text-rose-300/70 mt-1">Irmak Senin kıvırcıkk Sacına Dokundugumda Bile Evrenler arası geçis yapıyorum. KIVIRCIGIMM</p>
+                </div>
+                <div class="bg-rose-950/40 border border-rose-500/20 p-4 rounded-xl hover:border-rose-400/50 transition-all duration-300">
+                    <i class="fas fa-infinity text-pink-400 text-xl mb-2"></i>
+                    <h4 class="text-sm font-semibold text-rose-100">Bebegimm</h4>
+                    <p class="text-xs text-rose-300/70 mt-1">Seninle gecıcek her bir salise sana extra degerverdıgımı unutma seni nekadar sevdıgımı ne kadar asık oldugumu unutma</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Button -->
+        <div class="pt-2">
+            <button id="forgiveBtn" class="relative group inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-300 bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 rounded-full shadow-lg hover:shadow-rose-500/50 hover:scale-105 active:scale-95 border border-rose-400/30">
+                <span class="absolute inset-0 w-full h-full bg-white/20 rounded-full blur group-hover:opacity-100 opacity-0 transition-opacity"></span>
+                <i class="fas fa-heart mr-3 text-rose-200 animate-bounce"></i>
+                <span>Irmak Beni Affedermisin</span>
+            </button>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="z-10 mt-6 text-center text-xsin text-rose-400/60 font-light">
+        Bunu Sana Olan sevgım ve Pısmanlılarım icın hazırladım bitanemmm.
+    </footer>
+
+    <!-- Forgiveness Success Modal -->
+    <div id="forgiveModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <div class="glass-card max-w-md w-full p-8 rounded-3xl text-center relative transform border-2 border-rose-400/40 shadow-2xl">
+            <!-- Close Button -->
+            <button id="closeModalBtn" class="absolute top-4 right-4 text-rose-300 hover:text-white transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+
+            <!-- Big Heart Icon -->
+            <div class="w-20 h-20 bg-rose-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-rose-400/30">
+                <i class="fas fa-kiss-wink-heart text-4xl text-rose-400 animate-pulse"></i>
+            </div>
+
+            <h2 class="font-serif-custom text-2xl sm:text-3xl font-bold text-rose-100 mb-2">
+                Seni Çok Seviyorum! ✨
+            </h2>
+
+            <p class="text-rose-200 text-sm leading-relaxed my-4">
+                Bana bir şans daha verdiğin için teşekkür ederim sevgilimm Söz veriyorum gözlerindeki o güzel tebessümü bir daha asla eksiltmeyeceğim İyi ki varsın ırmakk
+            </p>
+
+            <button id="modalActionBtn" class="w-full py-3 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-semibold rounded-xl hover:from-rose-600 hover:to-pink-700 transition-all duration-300 shadow-md mt-2">
+                Sana Sarılmak İstiyorumm esrammm
+            </button>
+        </div>
+    </div>
+
+    <!-- Audio Element (Relaxing piano melody synth simulation fallback built in JS) -->
+    <audio id="bgAudio" loop preload="auto">
+        <!-- Relaxing royalty-free romantic background audio stream -->
+        <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-piano-112199.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- JavaScript Interactive Logic -->
+    <script>
+        // --- 1. TYPEWRITER EFFECT ---
+        const apologyText = "Bebegim bu mesajı sana yazarken bıle utanıyorum dedıklerımden cok haklı oldugunu kendımınde ıgrenc biri oldugumu bılıyorum ama sensiz yaşamıcagımda bir gerçek affetmen cok zor belkı ama affetmenı ıstıyorum hatalardan dersımı aldım lütfen bitanecık sevgılım herseyım benım senı uzdugum gunlerın hepsıne lanet olsun tuanadan nefret edıyorum bızım guzel ılıskımızı buldu benı belkı baslarda sevmedın aldattın ama benım ıcın esra esra olarak kaldı aynı degıl bılıyorum ama bı sans affdile bana cok pısanım senı cok sevıyorum ve hep sevecegım bı sans ver lütfen affet beni bebegımmmm artık benı sevıyosun en azından bunu kaybetmek ıstemıyorum sensız ben yasayamam bebebegım nolursun benı affett tanrım ol bebegım ol yavrum ol yasam sevıncım ol kısaca herseyım ol ama sen gitme SANA COK ASIGIM ESRAMMMM........";
+        
+        const typewriterElement = document.getElementById('typewriterText');
+        let index = 0;
+
+        function typeWriter() {
+            if (index < apologyText.length) {
+                typewriterElement.innerHTML += apologyText.charAt(index);
+                index++;
+                setTimeout(typeWriter, 35); // Typing speed in ms
+            } else {
+                // Add blinking cursor at the end
+                typewriterElement.innerHTML += '<span class="animate-pulse text-rose-400 font-bold">|</span>';
+            }
+        }
+
+        // Start typing shortly after page loads
+        window.addEventListener('load', () => {
+            setTimeout(typeWriter, 500);
+            initParticles();
+        });
+
+        // --- 2. FLOATING HEART PARTICLES BACKGROUND ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class HeartParticle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + Math.random() * 100;
+                this.size = Math.random() * 15 + 8;
+                this.speedY = Math.random() * 1.5 + 0.5;
+                this.speedX = Math.sin(Math.random() * Math.PI) * 0.8;
+                this.opacity = Math.random() * 0.5 + 0.2;
+                this.hue = Math.random() * 20 + 340; // Soft pink to deep red hues
+            }
+
+            update() {
+                this.y -= this.speedY;
+                this.x += Math.sin(this.y * 0.01) * 0.5;
+                if (this.y < -20) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.fillStyle = `hsla(${this.hue}, 80%, 60%, ${this.opacity})`;
+                ctx.beginPath();
+                // Draw heart path
+                const topCurveHeight = this.size * 0.3;
+                ctx.moveTo(0, topCurveHeight);
+                ctx.bezierCurveTo(0, 0, -this.size / 2, 0, -this.size / 2, topCurveHeight);
+                ctx.bezierCurveTo(-this.size / 2, (this.size + topCurveHeight) / 2, 0, this.size, 0, this.size);
+                ctx.bezierCurveTo(0, this.size, this.size / 2, (this.size + topCurveHeight) / 2, this.size / 2, topCurveHeight);
+                ctx.bezierCurveTo(this.size / 2, 0, 0, 0, 0, topCurveHeight);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const particleCount = Math.floor(window.innerWidth / 20); // Responsive density
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new HeartParticle());
+            }
+            animateParticles();
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        // --- 3. INTERACTIVE MAIN HEART (BURST PARTICLES ON CLICK) ---
+        const mainHeart = document.getElementById('mainHeart');
+        mainHeart.addEventListener('click', (e) => {
+            // Burst sweet mini confetti hearts from click position
+            confetti({
+                particleCount: 25,
+                spread: 60,
+                origin: { x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight },
+                colors: ['#f43f5e', '#fb7185', '#fda4af', '#fef08a']
+            });
+        });
+
+        // --- 4. MUSIC CONTROLLER ---
+        const musicToggleBtn = document.getElementById('musicToggleBtn');
+        const bgAudio = document.getElementById('bgAudio');
+        const musicIcon = document.getElementById('musicIcon');
+        const musicText = document.getElementById('musicText');
+        let isPlaying = false;
+
+        musicToggleBtn.addEventListener('click', () => {
+            if (!isPlaying) {
+                bgAudio.play().then(() => {
+                    isPlaying = true;
+                    musicIcon.className = "fas fa-volume-up text-rose-400 animate-bounce";
+                    musicText.innerText = "Müzik Çalıyor 🎶";
+                }).catch(err => {
+                    console.log("Audio autoplay restriction:", err);
+                });
+            } else {
+                bgAudio.pause();
+                isPlaying = false;
+                musicIcon.className = "fas fa-music text-rose-400";
+                musicText.innerText = "Müziği Başlat 🎵";
+            }
+        });
+
+        // --- 5. FORGIVENESS BUTTON & CELEBRATION MODAL ---
+        const forgiveBtn = document.getElementById('forgiveBtn');
+        const forgiveModal = document.getElementById('forgiveModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const modalActionBtn = document.getElementById('modalActionBtn');
+
+        function triggerCelebration() {
+            // Show Modal
+            forgiveModal.classList.remove('hidden');
+            setTimeout(() => {
+                forgiveModal.classList.remove('opacity-0');
+            }, 10);
+
+            // Grand Confetti Explosion
+            const duration = 3 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+
+            function randomInRange(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            const interval = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                const particleCount = 50 * (timeLeft / duration);
+                
+                confetti(Object.assign({}, defaults, { 
+                    particleCount, 
+                    origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+                    colors: ['#e11d48', '#f43f5e', '#fb7185', '#fde047']
+                }));
+                confetti(Object.assign({}, defaults, { 
+                    particleCount, 
+                    origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+                    colors: ['#e11d48', '#f43f5e', '#fb7185', '#fde047']
+                }));
+            }, 250);
+        }
+
+        forgiveBtn.addEventListener('click', triggerCelebration);
+
+        function closeModal() {
+            forgiveModal.classList.add('opacity-0');
+            setTimeout(() => {
+                forgiveModal.classList.add('hidden');
+            }, 300);
+        }
+
+        closeModalBtn.addEventListener('click', closeModal);
+        modalActionBtn.addEventListener('click', () => {
+            closeModal();
+            // Optional extra burst
+            confetti({
+                particleCount: 40,
+                spread: 100,
+                origin: { y: 0.8 }
+            });
+        });
+
+        // Close modal when clicking outside content box
+        forgiveModal.addEventListener('click', (e) => {
+            if (e.target === forgiveModal) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
